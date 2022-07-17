@@ -154,56 +154,179 @@ tiles_manager_c.new=function(type,x,y)
 		end
 	end
 
-	--[[local function set_beaches(x,y)
-		for dx=x-1,x+1 do
-			for dy=y-1,y+1 do
-				if(not map_check_flag(x,y,0)) set_beach(x,y)
-			end
+	function self.draw()
+		for b in all(self.beaches) do
+			spr(b.sprite,b.x*8,b.y*8,1,1,b.flip_x,b.flip_y)
+		end
+		for t in all(self.permitted_tiles) do
+			spr(51,t.x*8,t.y*8)
 		end
 	end
-	local function set_beach(x,y)
+	local function corner_compute(corners_number,corners)
+		if corners_number==1 then
+			if corners[1] then
+				return {sprite=37,flip_x=false,flip_y=false}
+			elseif corners[2] then
+				return {sprite=37,flip_x=false,flip_y=true}
+			elseif corners[3] then
+				return {sprite=37,flip_x=true,flip_y=true}
+			elseif corners[4] then
+				return {sprite=37,flip_x=true,flip_y=false}
+			end
+		end
+		if corners_number==2 then
+			if (corners[1] and corners[3]) then
+				return {sprite=41,flip_x=false,flip_y=false}
+			elseif (corners[2] and corners[4]) then
+				return {sprite=41,flip_x=false,flip_y=true}
+
+			elseif (corners[1] and corners[2]) then
+				return {sprite=42,flip_x=false,flip_y=false}
+			elseif (corners[2] and corners[3]) then
+				return {sprite=38,flip_x=false,flip_y=true}
+			elseif (corners[3] and corners[4]) then
+				return {sprite=42,flip_x=true,flip_y=false}
+			elseif (corners[4] and corners[1]) then
+				return {sprite=38,flip_x=false,flip_y=false}
+			end
+		end
+		if corners_number==3 then
+			if not corners[1] then
+				return {sprite=39,flip_x=true,flip_y=true}
+			elseif not corners[2] then
+				return {sprite=39,flip_x=true,flip_y=false}
+			elseif not corners[3] then
+				return {sprite=39,flip_x=false,flip_y=false}
+			elseif not corners[4] then
+				return {sprite=39,flip_x=false,flip_y=true}
+			end
+		end
+		if corners_number==4 then
+			return {sprite=40,flip_x=false,flip_y=false}
+		end
+		return nil
+	end
+	local function border_compute(borders_number,borders)
+		if borders_number==1 then
+			if borders[1] then
+				return {sprite=32,flip_x=false,flip_y=false}
+			elseif borders[2] then
+				return {sprite=43,flip_x=false,flip_y=false}
+			elseif borders[3] then
+				return {sprite=32,flip_x=false,flip_y=true}
+			elseif borders[4] then
+				return {sprite=43,flip_x=true,flip_y=false}
+			end
+		end
+		if borders_number==2 then
+			if (borders[1] and borders[3]) then
+				return {sprite=35,flip_x=false,flip_y=false}
+			elseif (borders[2] and borders[4]) then
+				return {sprite=44,flip_x=false,flip_y=false}
+
+			elseif (borders[1] and borders[2]) then
+				return {sprite=33,flip_x=false,flip_y=false}
+			elseif (borders[2] and borders[3]) then
+				return {sprite=33,flip_x=false,flip_y=true}
+			elseif (borders[3] and borders[4]) then
+				return {sprite=33,flip_x=true,flip_y=true}
+			elseif (borders[4] and borders[1]) then
+				return {sprite=33,flip_x=true,flip_y=false}
+			end
+		end
+		if borders_number==3 then
+			if not borders[1] then
+				return {sprite=45,flip_x=false,flip_y=false}
+			elseif not borders[2] then
+				return {sprite=34,flip_x=true,flip_y=true}
+			elseif not borders[3] then
+				return {sprite=45,flip_x=true,flip_y=false}
+			elseif not borders[4] then
+				return {sprite=34,flip_x=false,flip_y=false}
+			end
+		end
+		if borders_number==4 then
+			return {sprite=36,flip_x=false,flip_y=false}
+		end
+		return nil
+	end
+
+	local function get_beach_sprite(x,y)
+		local sprite=1
+		local flip_x=false
+		local flip_y=false
+
 		--N,W,S,E
 		local neighbors_number=0
 		local neighbors={false,false,false,false}
 		--NW,SW,SE,NE
 		local corners_number=0
-		local corner={false,false,false,false}
-		if not map_check_flag(x,y-1,0) then
+		local corners={false,false,false,false}
+		if map_check_flag(x,y-1,0) then
 			neighbors_number+=1
 			neighbors[1]=true
 		end
-		if not map_check_flag(x-1,y,0) then
+		if map_check_flag(x-1,y,0) then
 			neighbors_number+=1
 			neighbors[2]=true
 		end
-		if not map_check_flag(x,y+1,0) then
+		if map_check_flag(x,y+1,0) then
 			neighbors_number+=1
 			neighbors[3]=true
 		end
-		if not map_check_flag(x+1,y,0) then
+		if map_check_flag(x+1,y,0) then
 			neighbors_number+=1
 			neighbors[4]=true
 		end
 
-		if neighbors_number==0 then
-			if not map_check_flag(x-1,y-1,0) then
-				corners_number+=1
-				corner[1]=true
-			end
-			if not map_check_flag(x-1,y+1,0) then
-				corners_number+=1
-				corner[2]=true
-			end
-			if not map_check_flag(x+1,y+1,0) then
-				corners_number+=1
-				corner[3]=true
-			end
-			if not map_check_flag(x+1,y-1,0) then
-				corners_number+=1
-				corner[4]=true
+		if map_check_flag(x-1,y-1,0) then
+			corners_number+=1
+			corners[1]=true
+		end
+		if map_check_flag(x-1,y+1,0) then
+			corners_number+=1
+			corners[2]=true
+		end
+		if map_check_flag(x+1,y+1,0) then
+			corners_number+=1
+			corners[3]=true
+		end
+		if map_check_flag(x+1,y-1,0) then
+			corners_number+=1
+			corners[4]=true
+		end
+
+		local corner = corner_compute(corners_number,corners)
+		local border = border_compute(neighbors_number,neighbors)
+
+		if(corner and border) return {border, corner}
+		if(corner) return {corner}
+		if(border) return {border}
+	end
+	function self.get_beaches()
+		self.beaches={}
+		for t in all(self.tiles) do
+			for dx=t.x-1,t.x+1 do
+				for dy=t.y-1,t.y+1 do
+					if not map_check_flag(dx,dy,0) then
+						found=false
+						for b in all(self.beaches) do
+							if b.x==dx and b.y==dy then
+								found=true
+								break
+							end
+						end
+						if not found then
+							local data=get_beach_sprite(dx,dy)
+							for d in all(data) do
+								add(self.beaches,{sprite=d.sprite,x=dx,y=dy,flip_x=d.flip_x,flip_y=d.flip_y})
+							end
+						end
+					end
+				end
 			end
 		end
-	end]]
+	end
 	return self
 end
 tiles_manager=tiles_manager_c.new()

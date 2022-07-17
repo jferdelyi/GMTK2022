@@ -55,6 +55,7 @@ game_manager_c.new=function()
 					if player.place_tile() then
 						tiles_manager.reset_permitted_tiles()
 						selection_menu.reset()
+						tiles_manager.get_beaches()
 						game.phase=3
 					end
 				elseif(btnp(❎)) then
@@ -115,6 +116,7 @@ game_manager_c.new=function()
 		cls()
 		map()
 		if tuto_finished() then
+			tiles_manager.draw()
 			player.draw()
 			camera()
 			message.draw(self.phase==2)
