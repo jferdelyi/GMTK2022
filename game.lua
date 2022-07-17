@@ -16,6 +16,7 @@ game_manager_c.new=function()
 		self.focus=player
 		tiles_manager.init()
 		tiles_manager.add(tiles_manager_c.types.plain,16,16,true)
+		tiles_manager.get_beaches()
 		self.new_turn()
 		message.init()
 		self.theads={}
